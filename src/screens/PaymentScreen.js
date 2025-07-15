@@ -13,14 +13,36 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import CustomHeader from '../components/CustomHeader';
 import OrderProgressBar from '../components/OrderProgressBar';
 import * as Animatable from 'react-native-animatable';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const PaymentScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const amount = route.params?.amount || '0.00';
+    const [savedCards, setSavedCards] = useState([]);
 
     const [selectedPaymentMode, setSelectedPaymentMode] = useState('gpay');
     const [isPaying, setIsPaying] = useState(false);
+
+    // Fetch cards when screen is focused
+    useFocusEffect(
+        React.useCallback(() => {
+            const fetchCards = async () => {
+                try {
+                    const stored = await AsyncStorage.getItem('savedCards');
+                    if (stored) {
+                        setSavedCards(JSON.parse(stored));
+                    }
+                } catch (e) {
+                    console.log('Failed to fetch cards', e);
+                }
+            };
+
+            fetchCards();
+        }, [])
+    );
+
 
     const handlePay = () => {
         setIsPaying(true);
@@ -81,20 +103,30 @@ const PaymentScreen = () => {
                 </TouchableOpacity>
 
                 {/* Cards */}
-                <Text style={[styles.subTitle, { marginTop: 20 }]}>Credit and Debit cards</Text>
-                <TouchableOpacity
-                    style={styles.optionRow}
-                    onPress={() => setSelectedPaymentMode('card')}
-                >
-                    <Image
-                        source={require('../../assets/images/visa.png')}
-                        style={styles.cardIcon}
-                    />
-                    <Text style={styles.optionText}>**** **** **** 2143</Text>
-                    {selectedPaymentMode === 'card' && (
-                        <MaterialIcons name="radio-button-checked" color="orange" size={20} />
-                    )}
-                </TouchableOpacity>
+                <Text style={[styles.subTitle, { marginTop: 20 }]}>Saved cards</Text>
+
+                {/* mapped dynamic cards */}
+                {savedCards.map((card, index) => (
+                    <TouchableOpacity
+                        key={index}
+                        style={styles.optionRow}
+                        onPress={() => setSelectedPaymentMode(`card-${index}`)}
+                    >
+                        <Image
+                            source={
+                                card.type === 'visa'
+                                    ? require('../../assets/images/visa.png')
+                                    : require('../../assets/images/visa.png') // you can add more logos here
+                            }
+                            style={styles.cardIcon}
+                        />
+                        <Text style={styles.optionText}>**** **** **** {card.number}</Text>
+                        {selectedPaymentMode === `card-${index}` && (
+                            <MaterialIcons name="radio-button-checked" color="orange" size={20} />
+                        )}
+                    </TouchableOpacity>
+                ))}
+
 
                 {/* Add new card */}
                 <TouchableOpacity style={styles.addRow}

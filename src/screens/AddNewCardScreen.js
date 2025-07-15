@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
 import CustomHeader from '../components/CustomHeader';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddNewCardScreen = ({ navigation }) => {
     const [cardName, setCardName] = useState('');
@@ -32,15 +33,30 @@ const AddNewCardScreen = ({ navigation }) => {
         return cleaned.length >= 4 ? cleaned.slice(-4) : '****';
     };
 
-    const handleSavePay = () => {
-        // You can add validation here
+    const handleSavePay = async () => {
+        const newCard = {
+            number: getLastFourDigits(cardNumber),
+            type: 'visa',
+        };
+
+        if (saveCard) {
+            try {
+                const existing = await AsyncStorage.getItem('savedCards');
+                const savedCards = existing ? JSON.parse(existing) : [];
+                savedCards.push(newCard);
+                await AsyncStorage.setItem('savedCards', JSON.stringify(savedCards));
+            } catch (e) {
+                console.log('Error saving card:', e);
+            }
+        }
+
         navigation.navigate('PaymentSuccess', {
             paymentMode: 'Card',
-            amount: amount,
-            lastFour: getLastFourDigits(cardNumber),
-            
+            amount: '$212.99',
+            lastFour: newCard.number,
         });
     };
+
 
     return (
         <View style={styles.container}>
