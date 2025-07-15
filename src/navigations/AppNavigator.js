@@ -11,6 +11,9 @@ import CustomHeader from '../components/CustomHeader';
 import ProductDetail from '../screens/ProductDetail';
 import CartScreen from '../screens/CartScreen';
 import OrderSummaryScreen from '../screens/OrderSummaryScreen';
+import AddAddress from '../screens/AddAddress';
+import PaymentScreen from '../screens/PaymentScreen';
+import AddNewCardScreen from '../screens/AddNewCardScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -38,7 +41,7 @@ export default function AppNavigator() {
     }
 
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="splashscreen">
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="home">
             <Stack.Screen name="splashscreen" component={SplashScreen} />
             <Stack.Screen name='intro' component={IntroScreen} />
             <Stack.Screen name='home' component={BottomNavigator} />
@@ -75,6 +78,34 @@ export default function AppNavigator() {
             <Stack.Screen
                 name='OrderSummary'
                 component={OrderSummaryScreen}
+                options={({ navigation }) => ({
+                    header: () => <CustomHeader navigation={navigation} />,
+                })}
+            />
+
+
+            {/* AddAddress */}
+            <Stack.Screen
+                name='AddAddress'
+                component={AddAddress}
+                options={({ navigation }) => ({
+                    header: () => <CustomHeader navigation={navigation} />,
+                })}
+            />
+
+            {/* PaymentSuccess */}
+            <Stack.Screen
+                name='PaymentSuccess'
+                component={PaymentScreen}
+                options={({ navigation }) => ({
+                    header: () => <CustomHeader navigation={navigation} />,
+                })}
+            />
+
+            {/* AddNewCard */}
+            <Stack.Screen
+                name='AddNewCard'
+                component={AddNewCardScreen}
                 options={({ navigation }) => ({
                     header: () => <CustomHeader navigation={navigation} />,
                 })}

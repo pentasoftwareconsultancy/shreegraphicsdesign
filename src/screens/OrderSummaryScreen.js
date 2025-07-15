@@ -5,26 +5,30 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    ScrollView,
     TextInput,
+    FlatList,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useCart } from '../context/CartContext';
-import { useRoute } from '@react-navigation/native'; // ✅ Correct import
+import { useRoute } from '@react-navigation/native';
 import CustomHeader from '../components/CustomHeader';
 import OrderProgressBar from '../components/OrderProgressBar';
 import ProductSummaryCard from '../components/ProductSummaryCard';
 import AddressBox from '../components/AddressBox';
+import EstimatedDeliveryBox from '../components/EstimatedDeliveryBox';
+import * as Animatable from 'react-native-animatable';
+import { ActivityIndicator } from 'react-native';
 
 const OrderSummaryScreen = ({ navigation }) => {
     const { cartItems } = useCart();
-    const route = useRoute(); // ✅ Correct usage
+    const route = useRoute();
     const directBuyItem = route.params?.directBuyItem || null;
     const itemsToShow = directBuyItem ? [directBuyItem] : cartItems;
 
     const [coupon, setCoupon] = useState('');
     const [discount, setDiscount] = useState(0);
     const [message, setMessage] = useState('');
+    const [isPaying, setIsPaying] = useState(false);
 
     const calculateTotal = () => {
         return itemsToShow.reduce((total, item) => {
@@ -47,88 +51,138 @@ const OrderSummaryScreen = ({ navigation }) => {
         }
     };
 
+    const handlePay = () => {
+        setIsPaying(true);
+        setTimeout(() => {
+            setIsPaying(false);
+            navigation.navigate('PaymentSuccess', { amount: grandTotal });
+        }, 2000); // 2 seconds delay
+    };
+
+    const renderItem = ({ item }) => (
+        <View style={styles.productWrapper}>
+            <ProductSummaryCard item={item} />
+            <Text style={styles.metaInfo}>Size: {item.size} | Color: {item.color}</Text>
+        </View>
+    );
+
     return (
         <View style={styles.container}>
             <CustomHeader title="Order Summary" />
-
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <View style={styles.section}>
-                    <OrderProgressBar />
-                </View>
-
-                <View style={styles.section}>
-                    {(directBuyItem ? [directBuyItem] : cartItems).map((item, index) => (
-                        <View key={index} style={styles.productWrapper}>
-                            <ProductSummaryCard item={item} />
-                            <Text style={styles.metaInfo}>Size: {item.size} | Color: {item.color}</Text>
-                        </View>
-                    ))}
-                </View>
-
-                <View style={styles.amountSection}>
-                    <Text style={styles.amountTitle}>Amount to pay</Text>
-
-                    <View style={styles.amountRow}>
-                        <Text style={styles.amountLabel}>Total ({directBuyItem ? 1 : cartItems.length} items)</Text>
-
-                        <Text style={styles.amountValue}>₹{total.toFixed(2)}</Text>
-                    </View>
-
-                    <View style={styles.amountRow}>
-                        <Text style={styles.amountLabel}>Shipping Fee</Text>
-                        <Text style={styles.amountValue}>₹0.00</Text>
-                    </View>
-
-                    <View style={styles.amountRow}>
-                        <Text style={styles.amountLabel}>Discount</Text>
-                        <Text style={styles.amountValue}>₹{discount.toFixed(2)}</Text>
-                    </View>
-
-                    {discount > 0 && (
-                        <View style={styles.amountRow}>
-                            <Text style={styles.couponAppliedLabel}>Coupon Applied</Text>
-                            <Text style={styles.couponAppliedValue}>{coupon.toUpperCase()}</Text>
-                        </View>
-                    )}
-
-                    <View style={styles.amountRow}>
-                        <Text style={styles.subtotalLabel}>Sub Total</Text>
-                        <Text style={styles.subtotalValue}>₹{grandTotal}</Text>
-                    </View>
-                </View>
-
-                {/* Coupon Section */}
-                <View style={styles.section}>
-                    <View style={styles.couponContainer}>
-                        <TextInput
-                            placeholder="Enter coupon code"
-                            style={styles.input}
-                            autoCapitalize='none'
-                            value={coupon}
-                            onChangeText={setCoupon}
-                        />
-                        <TouchableOpacity style={styles.couponButton} onPress={handleApplyCoupon}>
-                            <MaterialIcons name="local-offer" color="#fff" size={16} />
-                            <Text style={styles.couponButtonText}>Apply coupon</Text>
-                        </TouchableOpacity>
-                    </View>
-                    {message !== '' && (
-                        <Text style={{ color: discount > 0 ? 'green' : 'red', marginTop: 6 }}>{message}</Text>
-                    )}
-                </View>
-
-
-
-                <View style={styles.section}>
-                    <AddressBox />
-                </View>
-            </ScrollView>
-            <View style={styles.stickyPayWrapper}>
-                <TouchableOpacity style={styles.payButton}>
-                    <Text style={styles.payText}>Pay ₹{grandTotal}</Text>
-                </TouchableOpacity>
+            {/* ✅ Moved out to make non-scrollable */}
+            <View style={styles.progressWrapper}>
+                <OrderProgressBar />
             </View>
 
+            <FlatList
+                data={itemsToShow}
+                keyExtractor={(item, index) => index.toString()}
+                ListHeaderComponent={
+                    <View style={styles.scrollContainer}>
+                        {/* <View style={styles.section}>
+                            <OrderProgressBar />
+                        </View> */}
+                        <Text style={styles.sectionHeader}>Products</Text>
+                    </View>
+                }
+                renderItem={renderItem}
+                ListFooterComponent={
+                    <View style={styles.scrollContainer}>
+
+                        {/* Amount Section */}
+                        <Animatable.View animation="slideInUp" duration={700} delay={300} style={styles.amountSection}>
+                            <View style={styles.amountSection}>
+                                <Text style={styles.amountTitle}>Amount to Pay</Text>
+
+                                <View style={styles.amountRow}>
+                                    <Text style={styles.amountLabel}>Total ({itemsToShow.length} items)</Text>
+                                    <Text style={styles.amountValue}>₹{total.toFixed(2)}</Text>
+                                </View>
+
+                                <View style={styles.amountRow}>
+                                    <Text style={styles.amountLabel}>Shipping Fee</Text>
+                                    <Text style={styles.amountValue}>₹0.00</Text>
+                                </View>
+
+                                <View style={styles.amountRow}>
+                                    <Text style={styles.amountLabel}>Discount</Text>
+                                    <Text style={styles.amountValue}>₹{discount.toFixed(2)}</Text>
+                                </View>
+
+                                {discount > 0 && (
+                                    <View style={styles.amountRow}>
+                                        <Text style={styles.couponAppliedLabel}>Coupon Applied</Text>
+                                        <Text style={styles.couponAppliedValue}>{coupon.toUpperCase()}</Text>
+                                    </View>
+                                )}
+
+                                <View style={[styles.amountRow, { marginTop: 8 }]}>
+                                    <Text style={styles.subtotalLabel}>Sub Total</Text>
+                                    <Text style={styles.subtotalValue}>₹{grandTotal}</Text>
+                                </View>
+                            </View>
+                        </Animatable.View>
+
+                        {/* Coupon Input */}
+                        <View style={styles.section}>
+                            <View style={styles.couponContainer}>
+                                <TextInput
+                                    placeholder="Enter coupon code"
+                                    style={styles.input}
+                                    autoCapitalize="none"
+                                    value={coupon}
+                                    onChangeText={setCoupon}
+                                />
+                                <TouchableOpacity style={styles.couponButton} onPress={handleApplyCoupon}>
+                                    <MaterialIcons name="local-offer" color="#fff" size={16} />
+                                    <Text style={styles.couponButtonText}>Apply</Text>
+                                </TouchableOpacity>
+                            </View>
+                            {message !== '' && (
+                                <Text style={[styles.couponMessage, { color: discount > 0 ? 'green' : 'red' }]}>
+                                    {message}
+                                </Text>
+                            )}
+                        </View>
+
+                        {/* Delivery Box */}
+                        <EstimatedDeliveryBox />
+
+                        {/* Address Section */}
+                        <View style={styles.sectionHeaderRow}>
+                            <Text style={styles.sectionHeader}>Shipping Address</Text>
+                            <TouchableOpacity
+                                style={styles.addAddressButton}
+                                onPress={() => navigation.navigate('AddAddress')}
+                            >
+                                <Text style={styles.addAddressText}>+ Add Address</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.section}>
+                            <AddressBox />
+                        </View>
+
+                        <View style={{ height: 100 }} />
+                    </View>
+                }
+            />
+
+            {/* Sticky Pay Button */}
+            <Animatable.View animation="bounceInUp" duration={700} delay={500} style={styles.stickyPayWrapper}>
+                <TouchableOpacity
+                    style={[styles.payButton, isPaying && { opacity: 0.7 }]}
+                    onPress={handlePay}
+                    disabled={isPaying}
+                >
+                    {isPaying ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                        <Text style={styles.payText}>Pay ₹{grandTotal}</Text>
+                    )}
+                </TouchableOpacity>
+
+            </Animatable.View>
         </View>
     );
 };
@@ -138,20 +192,51 @@ export default OrderSummaryScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 40,
         backgroundColor: '#fff',
+        paddingTop: 40,
     },
     scrollContainer: {
-        padding: 20,
-        paddingBottom: 100, // To avoid overlap with sticky button
+        paddingHorizontal: 20,
+        paddingTop: 10,
+        backgroundColor: '#fff',
+    },
+    progressWrapper: {
+        paddingHorizontal: 20,
+        marginTop: 0,
+        marginBottom: 10,
         backgroundColor: '#fff',
     },
     section: {
-        
         marginBottom: 24,
+    },
+    sectionHeader: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#222',
+        marginBottom: 12,
+    },
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginHorizontal: 20,
+        marginTop: 12,
+        marginBottom: 8,
+    },
+    addAddressButton: {
+        backgroundColor: '#f58220',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    addAddressText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 13,
     },
     productWrapper: {
         marginBottom: 12,
+        paddingHorizontal: 20,
     },
     metaInfo: {
         fontSize: 12,
@@ -159,23 +244,24 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     amountSection: {
-        marginVertical: 20,
-        paddingVertical: 12,
-        borderTopWidth: 1,
-        borderBottomWidth: 1,
+        padding: 16,
+        backgroundColor: '#fafafa',
+        borderRadius: 12,
+        marginBottom: 24,
+        borderWidth: 1,
         borderColor: '#eee',
     },
     amountTitle: {
         fontSize: 16,
         fontWeight: '700',
-        marginBottom: 12,
         color: '#000',
+        marginBottom: 10,
     },
     amountRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 6,
     },
     amountLabel: {
         fontSize: 14,
@@ -183,7 +269,18 @@ const styles = StyleSheet.create({
     },
     amountValue: {
         fontSize: 14,
+        fontWeight: '500',
         color: '#444',
+    },
+    couponAppliedLabel: {
+        fontSize: 13,
+        fontWeight: '500',
+        color: '#666',
+    },
+    couponAppliedValue: {
+        fontSize: 13,
+        fontWeight: '500',
+        color: '#f58220',
     },
     subtotalLabel: {
         fontSize: 15,
@@ -195,20 +292,10 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#f58220',
     },
-    couponAppliedLabel: {
-        fontSize: 13,
-        fontWeight: '500',
-        color: '#555',
-    },
-    couponAppliedValue: {
-        fontSize: 13,
-        fontWeight: '500',
-        color: '#f58220',
-    },
     couponContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        gap: 10,
     },
     input: {
         flex: 1,
@@ -218,7 +305,6 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 12,
         fontSize: 14,
-        marginRight: 10,
         backgroundColor: '#f9f9f9',
     },
     couponButton: {
@@ -234,24 +320,29 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginLeft: 6,
     },
+    couponMessage: {
+        marginTop: 6,
+        fontSize: 13,
+    },
     stickyPayWrapper: {
-        position: 'absolute',
+        position: 'relative',
         bottom: 0,
-        left: 0,
-        right: 0,
-        paddingHorizontal: 20,
-        paddingVertical: 10,
+        left: 50,
+        right: 30,
         // backgroundColor: '#fff',
+        padding: 16,
         // borderTopWidth: 1,
-        // borderColor: '#eee',
+        borderColor: '#eee',
+        elevation: 12,
     },
     payButton: {
         backgroundColor: '#f58220',
         paddingVertical: 16,
         borderRadius: 30,
-        bottom: 15,
+        bottom: 10,
         alignItems: 'center',
-        width: '100%',
+        width: '70%',
+        justifyContent: 'center', // ✅ for centering spinner/text
     },
     payText: {
         color: '#fff',

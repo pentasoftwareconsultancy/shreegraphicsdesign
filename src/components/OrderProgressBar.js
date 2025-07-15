@@ -1,39 +1,52 @@
-// src/components/OrderProgressBar.js
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 
-const OrderProgressBar = () => {
-    const navigation = useNavigation();
+const steps = [
+    { id: 1, label: 'Confirm Buy' },
+    { id: 2, label: 'Order Summary' },
+    { id: 3, label: 'Payment' },
+];
+
+const OrderProgressBar = ({ step = 2 }) => {
     return (
-        <View style={styles.progressWrapper}>
-            <View style={styles.stepWrapper}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <View style={styles.circleDone}>
-                        <MaterialIcons name="check" size={14} color="#fff" />
-                    </View>
+        <View style={styles.container}>
+            <View style={styles.stepContainer}>
+                {steps.map((s, index) => (
+                    <React.Fragment key={s.id}>
+                        <View style={styles.stepWrapper}>
+                            <View
+                                style={[
+                                    styles.circle,
+                                    step >= s.id ? styles.activeCircle : styles.inactiveCircle,
+                                ]}
+                            >
+                                {step > s.id ? (
+                                    <MaterialIcons name="check" size={16} color="white" />
+                                ) : (
+                                    <Text style={styles.circleText}>{s.id}</Text>
+                                )}
+                            </View>
+                            <Text
+                                style={[
+                                    styles.stepLabel,
+                                    step >= s.id ? styles.activeLabel : styles.inactiveLabel,
+                                ]}
+                            >
+                                {s.label}
+                            </Text>
+                        </View>
 
-                    <Text style={styles.stepTextActive}>confirm Buy</Text>
-                </TouchableOpacity>
-            </View>
-
-            <View style={styles.progressLineActive} />
-
-            <View style={styles.stepWrapper}>
-                <View style={styles.circleActive}>
-                    <Text style={styles.stepNumber}>2</Text>
-                </View>
-                <Text style={styles.stepTextActive}>Order summary</Text>
-            </View>
-
-            <View style={styles.progressLineInactive} />
-
-            <View style={styles.stepWrapper}>
-                <View style={styles.circleInactive}>
-                    <Text style={styles.stepNumber}>3</Text>
-                </View>
-                <Text style={styles.stepTextInactive}>Payment</Text>
+                        {index < steps.length - 1 && (
+                            <View
+                                style={[
+                                    styles.line,
+                                    step > s.id ? styles.activeLine : styles.inactiveLine,
+                                ]}
+                            />
+                        )}
+                    </React.Fragment>
+                ))}
             </View>
         </View>
     );
@@ -42,68 +55,59 @@ const OrderProgressBar = () => {
 export default OrderProgressBar;
 
 const styles = StyleSheet.create({
-    progressWrapper: {
+    container: {
+        marginVertical: 10,
+        paddingHorizontal: 10,
+    },
+    stepContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginVertical: 12,
+        justifyContent: 'center',
     },
     stepWrapper: {
         alignItems: 'center',
-        width: 80,
     },
-    circleDone: {
+    circle: {
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: '#f58220',
         justifyContent: 'center',
         alignItems: 'center',
+        marginBottom: 4,
     },
-    circleActive: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
+    activeCircle: {
         backgroundColor: '#f58220',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
-    circleInactive: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
+    inactiveCircle: {
         backgroundColor: '#ccc',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
-    stepNumber: {
-        color: '#fff',
-        fontSize: 12,
+    circleText: {
+        color: 'white',
         fontWeight: 'bold',
+        fontSize: 12,
     },
-    stepTextActive: {
-        fontSize: 11,
-        marginTop: 6,
-        fontWeight: '600',
+    stepLabel: {
+        fontSize: 10,
+        textAlign: 'center',
+        width: 60,
+    },
+    activeLabel: {
         color: '#f58220',
-        textAlign: 'center',
+        fontWeight: '600',
     },
-    stepTextInactive: {
-        fontSize: 11,
-        marginTop: 6,
-        color: '#aaa',
-        textAlign: 'center',
+    inactiveLabel: {
+        color: '#999',
     },
-    progressLineActive: {
-        height: 2,
+    line: {
+        height: 4,
+        width: 70,
+        marginHorizontal: 5,
+        marginTop: -21,
+    },
+    activeLine: {
         backgroundColor: '#f58220',
-        flex: 1,
-        marginHorizontal: 4,
     },
-    progressLineInactive: {
-        height: 2,
+    inactiveLine: {
         backgroundColor: '#ccc',
-        flex: 1,
-        marginHorizontal: 4,
     },
 });

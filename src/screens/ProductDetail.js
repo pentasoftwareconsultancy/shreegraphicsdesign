@@ -1,29 +1,29 @@
-// src/screens/ProductDetailScreen.js
 import React, { useState } from 'react';
 import {
     View,
     Text,
     Image,
     StyleSheet,
-    ScrollView,
     TouchableOpacity,
     SafeAreaView,
     TextInput,
+    FlatList,
+    ScrollView,
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFavorite } from '../context/FavoriteContext';
-import { useCart } from '../context/CartContext'; // ✅ Add cart context
+import { useCart } from '../context/CartContext';
 
 const ProductDetailScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const { product } = route.params;
     const { favorites, toggleFavorite } = useFavorite();
-    const isFavorite = favorites.some(f => f.id === product.id);
-    const { addToCart } = useCart(); // ✅ Add cart context hook
+    const { addToCart } = useCart();
 
-    const [quantity, setQuantity] = useState(1);
+    const isFavorite = favorites.some(f => f.id === product.id);
+    const [quantity] = useState(1);
     const [selectedSize, setSelectedSize] = useState('M');
     const [selectedColor, setSelectedColor] = useState(product?.colors?.[0] || '#60a69f');
     const [descriptionText, setDescriptionText] = useState('');
@@ -42,7 +42,6 @@ const ProductDetailScreen = () => {
         navigation.navigate('Cart');
     };
 
-    // Handle Buy Now Button
     const handleBuyNow = () => {
         navigation.navigate('OrderSummary', {
             directBuyItem: {
@@ -55,116 +54,122 @@ const ProductDetailScreen = () => {
         });
     };
 
+    const renderContent = () => (
+        <View>
+            <View style={styles.imageWrapper}>
+                <Image source={product.image} style={styles.image} />
+                <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+                    <Ionicons name="chevron-back" size={20} color="#000" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => toggleFavorite(product)} style={styles.favBtn}>
+                    <MaterialIcons name={isFavorite ? 'favorite' : 'favorite-border'} size={20} color={isFavorite ? 'orange' : '#000'} />
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.contentWrapper}>
+                <Text style={styles.title}>{product.title}</Text>
+                <Text style={styles.price}>{product.price}</Text>
+
+                <View style={styles.ratingRow}>
+                    <MaterialIcons name="star" size={14} color="gold" />
+                    <Text style={styles.ratingText}>{product.rating} ({product.reviews} reviews)</Text>
+                </View>
+
+                <Text style={styles.description}>
+                    {product.description || 'Its simple and elegant print makes it perfect for those who like minimalist clothes. Read More...'}
+                </Text>
+
+                <View style={styles.selectCombinedRow}>
+                    <View style={styles.selectColumn}>
+                        <Text style={styles.label}>Choose Size</Text>
+                        <View style={styles.optionsRow}>
+                            {sizes.map((size) => (
+                                <TouchableOpacity
+                                    key={size}
+                                    style={[styles.sizeBtn, selectedSize === size && styles.sizeSelected]}
+                                    onPress={() => setSelectedSize(size)}
+                                >
+                                    <Text>{size}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+
+                    <View style={styles.selectColumn}>
+                        <Text style={styles.label}>Color</Text>
+                        <View style={styles.optionsRow}>
+                            {colors.map((color, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={[
+                                        styles.colorCircle,
+                                        { backgroundColor: color },
+                                        selectedColor === color && styles.selectedColorCircle,
+                                    ]}
+                                    onPress={() => setSelectedColor(color)}
+                                />
+                            ))}
+                        </View>
+                    </View>
+                </View>
+
+                <Text style={styles.sectionHeader}>Description</Text>
+                <TextInput
+                    style={styles.inputBox}
+                    placeholder="Write product description here..."
+                    multiline
+                    value={descriptionText}
+                    onChangeText={setDescriptionText}
+                />
+
+                <Text style={styles.sectionHeader}>Customer review</Text>
+                <View style={styles.reviewBox}>
+                    <Text style={styles.reviewPlaceholder}>Share your thoughts</Text>
+                    <Ionicons name="arrow-forward-circle" size={20} color="#f58220" />
+                </View>
+
+                <Text style={styles.sectionHeader}>Related Products</Text>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.relatedWrapper}
+                >
+                    {[1, 2, 3].map((_, index) => (
+                        <View key={index} style={styles.relatedCard}>
+                            <Image source={product.image} style={styles.relatedImage} />
+                            <Text style={styles.relatedTitle}>Sample Product</Text>
+                            <Text style={styles.relatedSubtitle}>Dress modern</Text>
+                            <Text style={styles.relatedPrice}>$162.99</Text>
+                        </View>
+                    ))}
+                </ScrollView>
+            </View>
+        </View>
+    );
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={{ flex: 1 }}>
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <View style={styles.imageWrapper}>
-                        <Image source={product.image} style={styles.image} />
-                        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-                            <Ionicons name="chevron-back" size={20} color="#000" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => toggleFavorite(product)} style={styles.favBtn}>
-                            <MaterialIcons name={isFavorite ? "favorite" : "favorite-border"} size={20} color={isFavorite ? "orange" : "#000"} />
-                        </TouchableOpacity>
-                    </View>
+            <FlatList
+                data={[]}
+                ListHeaderComponent={renderContent}
+                keyExtractor={() => 'empty'}
+                contentContainerStyle={styles.scrollContent}
+            />
 
-                    <View style={styles.contentWrapper}>
-                        <Text style={styles.title}>{product.title}</Text>
-                        <Text style={styles.price}>{product.price}</Text>
-
-                        <View style={styles.ratingRow}>
-                            <MaterialIcons name="star" size={14} color="gold" />
-                            <Text style={styles.ratingText}>
-                                {product.rating} ({product.reviews} reviews)
-                            </Text>
-                        </View>
-
-                        <Text style={styles.description}>
-                            {product.description ||
-                                'Its simple and elegant print makes it perfect for those who like minimalist clothes. Read More...'}
-                        </Text>
-
-                        <View style={styles.selectCombinedRow}>
-                            <View style={styles.selectColumn}>
-                                <Text style={styles.label}>Choose Size</Text>
-                                <View style={styles.optionsRow}>
-                                    {sizes.map((size) => (
-                                        <TouchableOpacity
-                                            key={size}
-                                            style={[styles.sizeBtn, selectedSize === size && styles.sizeSelected]}
-                                            onPress={() => setSelectedSize(size)}
-                                        >
-                                            <Text>{size}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
-
-                            <View style={styles.selectColumn}>
-                                <Text style={styles.label}>Color</Text>
-                                <View style={styles.optionsRow}>
-                                    {colors.map((color, index) => (
-                                        <TouchableOpacity
-                                            key={index}
-                                            style={[
-                                                styles.colorCircle,
-                                                { backgroundColor: color },
-                                                selectedColor === color && styles.selectedColorCircle,
-                                            ]}
-                                            onPress={() => setSelectedColor(color)}
-                                        />
-                                    ))}
-                                </View>
-                            </View>
-                        </View>
-
-                        <Text style={styles.sectionHeader}>Description</Text>
-                        <TextInput
-                            style={styles.inputBox}
-                            placeholder="Write product description here..."
-                            multiline
-                            value={descriptionText}
-                            onChangeText={setDescriptionText}
-                        />
-
-                        <Text style={styles.sectionHeader}>Customer review</Text>
-                        <View style={styles.reviewBox}>
-                            <Text style={styles.reviewPlaceholder}>Share your thoughts</Text>
-                            <Ionicons name="arrow-forward-circle" size={20} color="#f58220" />
-                        </View>
-                    </View>
-
-                    <Text style={styles.sectionHeader}>Related Products</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.relatedWrapper}>
-                        {[1, 2, 3].map((_, index) => (
-                            <View key={index} style={styles.relatedCard}>
-                                <Image source={product.image} style={styles.relatedImage} />
-                                <Text style={styles.relatedTitle}>Sample Product</Text>
-                                <Text style={styles.relatedSubtitle}>Dress modern</Text>
-                                <Text style={styles.relatedPrice}>$162.99</Text>
-                            </View>
-                        ))}
-                    </ScrollView>
-                </ScrollView>
-
-                <View style={styles.bottomActionWrapper}>
-                    <TouchableOpacity style={styles.cartBtn} onPress={handleAddToCart}>
-                        <MaterialIcons name="shopping-cart" size={16} color="#f58220" />
-                        <Text style={styles.cartBtnText}>Add to Cart</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.buyNowBtn} onPress={handleBuyNow}>
-                        <Text style={styles.buyNowText}>Buy now</Text>
-                    </TouchableOpacity>
-                </View>
+            <View style={styles.bottomActionWrapper}>
+                <TouchableOpacity style={styles.cartBtn} onPress={handleAddToCart}>
+                    <MaterialIcons name="shopping-cart" size={16} color="#f58220" />
+                    <Text style={styles.cartBtnText}>Add to Cart</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.buyNowBtn} onPress={handleBuyNow}>
+                    <Text style={styles.buyNowText}>Buy now</Text>
+                </TouchableOpacity>
             </View>
         </SafeAreaView>
     );
 };
 
 export default ProductDetailScreen;
-
 
 
 const styles = StyleSheet.create({
@@ -277,13 +282,13 @@ const styles = StyleSheet.create({
     },
     bottomActionWrapper: {
         position: 'absolute',
-        bottom: 0,
+        bottom: 20,
         left: 0,
         right: 0,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 12,
+        paddingHorizontal: 25,
+        paddingVertical: 15,
         backgroundColor: '#fff',
         borderTopWidth: 1,
         borderColor: '#eee',
