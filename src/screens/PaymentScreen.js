@@ -28,27 +28,37 @@ const PaymentScreen = () => {
     // Fetch cards when screen is focused
     useFocusEffect(
         React.useCallback(() => {
-            const fetchCards = async () => {
+            const fetchSavedCards = async () => {
                 try {
                     const stored = await AsyncStorage.getItem('savedCards');
-                    if (stored) {
-                        setSavedCards(JSON.parse(stored));
-                    }
+                    setSavedCards(stored ? JSON.parse(stored) : []);
                 } catch (e) {
-                    console.log('Failed to fetch cards', e);
+                    console.log('Error fetching cards:', e);
                 }
             };
-
-            fetchCards();
+            fetchSavedCards();
         }, [])
     );
 
+
+    const handleDeleteCard = async (index) => {
+        try {
+            const stored = await AsyncStorage.getItem('savedCards');
+            let cards = stored ? JSON.parse(stored) : [];
+
+            cards.splice(index, 1);
+            await AsyncStorage.setItem('savedCards', JSON.stringify(cards));
+            setSavedCards(cards); // ⬅️ if using useState for savedCards
+        } catch (err) {
+            console.error("Delete error:", err);
+        }
+    };
 
     const handlePay = () => {
         setIsPaying(true);
         setTimeout(() => {
             setIsPaying(false);
-            navigation.navigate('PaymentSuccess', {
+            navigation.navigate('orderplaced', {
                 amount,
                 paymentMode:
                     selectedPaymentMode === 'gpay'
@@ -107,25 +117,37 @@ const PaymentScreen = () => {
 
                 {/* mapped dynamic cards */}
                 {savedCards.map((card, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        style={styles.optionRow}
-                        onPress={() => setSelectedPaymentMode(`card-${index}`)}
-                    >
-                        <Image
-                            source={
-                                card.type === 'visa'
-                                    ? require('../../assets/images/visa.png')
-                                    : require('../../assets/images/visa.png') // you can add more logos here
-                            }
-                            style={styles.cardIcon}
-                        />
-                        <Text style={styles.optionText}>**** **** **** {card.number}</Text>
-                        {selectedPaymentMode === `card-${index}` && (
-                            <MaterialIcons name="radio-button-checked" color="orange" size={20} />
-                        )}
-                    </TouchableOpacity>
+                    <View key={index} style={styles.savedCardRow}>
+
+                        <TouchableOpacity
+                            style={styles.optionRow}
+                            onPress={() => setSelectedPaymentMode(card.number)}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                <Image
+                                    source={require('../../assets/images/visa.png')}
+                                    style={styles.cardIcon}
+                                />
+                                <Text style={styles.optionText}>**** **** **** {card.number}</Text>
+                            </View>
+
+                            <TouchableOpacity onPress={() => handleDeleteCard(index)}>
+                                <MaterialIcons name="delete" size={22} color="red" />
+                            </TouchableOpacity>
+                        </TouchableOpacity>
+
+                        {/* <View style={styles.cardActions}>
+                            <TouchableOpacity onPress={() => navigation.navigate('EditCardScreen', { cardIndex: index, card })}>
+                                <MaterialIcons name="edit" size={20} color="blue" />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={() => handleDeleteCard(index)}>
+                                <MaterialIcons name="delete" size={20} color="red" style={{ marginLeft: 15 }} />
+                            </TouchableOpacity>
+                        </View> */}
+                    </View>
                 ))}
+
 
 
                 {/* Add new card */}
@@ -183,6 +205,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 10,
     },
+    cardActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 0,
+    },
     scroll: {
         paddingHorizontal: 20,
         paddingBottom: 100,
@@ -200,6 +227,7 @@ const styles = StyleSheet.create({
     optionRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between', // ✅ Added
         paddingVertical: 10,
         borderBottomWidth: 0.5,
         borderColor: '#eee',

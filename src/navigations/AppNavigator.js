@@ -14,6 +14,7 @@ import OrderSummaryScreen from '../screens/OrderSummaryScreen';
 import AddAddress from '../screens/AddAddress';
 import PaymentScreen from '../screens/PaymentScreen';
 import AddNewCardScreen from '../screens/AddNewCardScreen';
+import OrderPlacedScreen from '../screens/OrderPlacedScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -110,6 +111,17 @@ export default function AppNavigator() {
                     header: () => <CustomHeader navigation={navigation} />,
                 })}
             />
+
+
+            {/* OrderPlacedScreen */}
+            <Stack.Screen
+                name='orderplaced'
+                component={OrderPlacedScreen}
+                options={({ navigation }) => ({
+                    header: () => <CustomHeader navigation={navigation} />,
+                })}
+            />
+            
 
         </Stack.Navigator>
     );

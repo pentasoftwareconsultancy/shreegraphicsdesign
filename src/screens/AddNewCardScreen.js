@@ -52,7 +52,7 @@ const AddNewCardScreen = ({ navigation }) => {
 
         navigation.navigate('PaymentSuccess', {
             paymentMode: 'Card',
-            amount: '$212.99',
+            amount: amount,
             lastFour: newCard.number,
         });
     };
