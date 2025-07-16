@@ -17,18 +17,40 @@ const OrderSuccessScreen = () => {
 
   useEffect(() => {
     const sendWhatsAppMessage = () => {
-      const adminPhone = '919876543210'; // ✅ Replace with actual admin number
-      const message = `🛒 *New Order Placed!*\n\n👤 Name: ${address?.fullName}\n📦 Total: ₹${amount}\n📱 Phone: ${address?.phone}\n📍 Address: ${address?.line1}, ${address?.line2}, ${address?.city}, ${address?.state} - ${address?.pincode}\n📅 Delivery by: ${deliveryDate}`;
-
+      const adminPhone = '8210129246'; // ✅ Replace with actual admin number
+  
+      // 🧾 Format each item nicely
+      const itemDetails = items
+        .map((item, index) => {
+          return `\n${index + 1}. *${item.title}* (${item.size || 'N/A'})\n   Qty: ${item.quantity || 1}\n   Price: ₹${item.price}`;
+        })
+        .join('\n');
+  
+      // 📦 Complete message
+      const message = `🛒 *New Order Placed!*
+  
+  👤 *Customer Name:* ${address?.fullName}
+  📱 *Phone:* ${address?.phone}
+  📍 *Address:* ${address?.line1}, ${address?.line2}, ${address?.city}, ${address?.state} - ${address?.pincode}
+  🗓️ *Delivery Date:* ${deliveryDate}
+  
+  🧾 *Order Summary:*
+  ${itemDetails}
+  
+  💰 *Total Amount:* ₹${amount}
+  `;
+  
       const url = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
-
+  
       Linking.openURL(url).catch(() =>
         Alert.alert('WhatsApp not installed', 'Please install WhatsApp to send message')
       );
     };
-
+  
     sendWhatsAppMessage();
   }, []);
+  
+
 
 
   // ✅ Extract data from route safely
