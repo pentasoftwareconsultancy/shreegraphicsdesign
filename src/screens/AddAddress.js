@@ -6,6 +6,8 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import CustomHeader from '../components/CustomHeader';
+import { MaterialIcons } from '@expo/vector-icons';
+
 
 const STORAGE_KEY = 'user_addresses';
 
@@ -91,9 +93,10 @@ const AddAddressScreen = ({ navigation }) => {
     <View style={styles.container}>
       <CustomHeader title="Add Address" />
       <ScrollView contentContainerStyle={styles.form}>
-        <TouchableOpacity style={styles.locationButton} onPress={getCurrentLocation}>
-          <Text style={styles.locationButtonText}>📍 Use Current Location</Text>
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.locationButton} onPress={getCurrentLocation}>
+  <MaterialIcons name="my-location" size={20} color="#f58220" style={{ marginRight: 8 }} />
+  <Text style={styles.locationButtonText}>Use Current Location</Text>
+</TouchableOpacity>
 
         <Input label="Full name" value={form.fullName} onChangeText={(v) => handleChange('fullName', v)} />
         <Input label="Phone number" value={form.phone} keyboardType="phone-pad" onChangeText={(v) => handleChange('phone', v)} />
@@ -112,7 +115,17 @@ const AddAddressScreen = ({ navigation }) => {
 
         <Input label="Pincode / ZIP Code" value={form.pincode} keyboardType="numeric" onChangeText={(v) => handleChange('pincode', v)} />
         <Input label="Label (e.g., Home, Work)" value={form.label} onChangeText={(v) => handleChange('label', v)} />
-
+        {/* <Text style={styles.label}>Label</Text>
+        <View style={styles.radioRow}>
+          <TouchableOpacity style={styles.radioButton} onPress={() => handleChange('label', 'Home')}>
+            <View style={[styles.radioCircle, form.label === 'Home' && styles.selectedRadio]} />
+            <Text style={styles.radioText}>Home</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.radioButton} onPress={() => handleChange('label', 'Work')}>
+            <View style={[styles.radioCircle, form.label === 'Work' && styles.selectedRadio]} />
+            <Text style={styles.radioText}>Work</Text>
+          </TouchableOpacity>
+        </View> */}
         <View style={styles.switchRow}>
           <Text style={styles.label}>Set as default address</Text>
           <Switch
@@ -146,7 +159,7 @@ export default AddAddressScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    top:40
+    top: 40
     // backgroundColor: '#fff',
   },
   form: {
@@ -178,7 +191,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 10,
-    marginBottom:30,
+    marginBottom: 30,
   },
   cancelBtn: {
     borderWidth: 1,
@@ -208,14 +221,51 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   locationButton: {
-    // backgroundColor: '#f0f0f0',
-    padding: 12,
-    borderRadius: 8,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderColor: '#f58220',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
+  
   locationButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#f58220',
+  },
+  radioRow: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    gap: 20,
+  },
+  radioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  radioCircle: {
+    height: 16,
+    width: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#555',
+    marginRight: 8,
+  },
+  selectedRadio: {
+    backgroundColor: '#f58220',
+    borderColor: '#f58220',
+  },
+  radioText: {
+    fontSize: 14,
     color: '#333',
-    fontWeight: '500',
   },
 });
