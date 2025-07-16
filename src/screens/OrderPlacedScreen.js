@@ -1,93 +1,146 @@
-// src/screens/OrderSuccessScreen.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Image,
   TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import CustomHeader from '../components/CustomHeader';
+import { Linking, Alert } from 'react-native';
 
 const OrderSuccessScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
 
-  // Extracting passed order data
+  useEffect(() => {
+    const sendWhatsAppMessage = () => {
+      const adminPhone = '919876543210'; // ✅ Replace with actual admin number
+      const message = `🛒 *New Order Placed!*\n\n👤 Name: ${address?.fullName}\n📦 Total: ₹${amount}\n📱 Phone: ${address?.phone}\n📍 Address: ${address?.line1}, ${address?.line2}, ${address?.city}, ${address?.state} - ${address?.pincode}\n📅 Delivery by: ${deliveryDate}`;
+
+      const url = `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
+
+      Linking.openURL(url).catch(() =>
+        Alert.alert('WhatsApp not installed', 'Please install WhatsApp to send message')
+      );
+    };
+
+    sendWhatsAppMessage();
+  }, []);
+
+
+  // ✅ Extract data from route safely
   const {
-    address,
-    user,
-    deliveryDate,
-    paymentMode,
-    amount,
-    productImage,
-  } = route.params;
+    address = {},
+    deliveryDate = '',
+    paymentMethod = '',
+    amount = 0,
+    items = [],
+  } = route.params || {};
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
+      <CustomHeader />
+
+      {/* ✅ Success Icon & Message */}
       <Ionicons name="checkmark-circle" size={80} color="green" style={styles.successIcon} />
-      <Text style={styles.successTitle}>Order placed, thank you</Text>
-      <Text style={styles.successSubtitle}>Confirmation will be sent to your registered phone number.</Text>
+      <Text style={styles.successTitle}>Order Placed Successfully!</Text>
+      <Text style={styles.successSubtitle}>
+        Your order will be delivered soon. Confirmation sent via SMS.
+      </Text>
 
       <View style={styles.sectionDivider} />
 
-      {/* Address Section */}
-      <View>
-        <Text style={styles.sectionTitle}>Shipping to {user?.name} ({address?.label})</Text>
-        <Text style={styles.addressText}>{address?.full}</Text>
-        <Text style={styles.addressText}>Phone number: {address?.phone}</Text>
+      {/* ✅ Shipping Address */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
+          Shipping Address ({address?.label || 'N/A'})
+        </Text>
+        <Text style={styles.addressText}>{address?.fullName}</Text>
+        <Text style={styles.addressText}>{address?.line1}, {address?.line2}</Text>
+        <Text style={styles.addressText}>{address?.landmark}</Text>
+        <Text style={styles.addressText}>
+          {address?.city}, {address?.state} - {address?.pincode}
+        </Text>
+        <Text style={styles.addressText}>{address?.country}</Text>
+        <Text style={styles.addressText}>Phone: {address?.phone}</Text>
       </View>
 
       <View style={styles.sectionDivider} />
 
-      {/* Delivery Info */}
-      <View style={styles.deliveryRow}>
-        <Image source={{ uri: productImage }} style={styles.productImage} />
-        <View>
-          <Text style={styles.deliveryLabel}>Delivery date:</Text>
-          <Text style={styles.deliveryValue}>{deliveryDate}</Text>
+      {/* ✅ Order Items & Delivery Info */}
+      <Text style={styles.sectionTitle}>Items Ordered</Text>
+      {items.slice(0, 1).map((item, idx) => {
+        const imageUri = item.image?.uri || item.image;
+        return (
+          <View key={idx} style={styles.itemRow}>
+            <Image
+              source={{ uri: imageUri }}
+              style={styles.productImage}
+              resizeMode="cover"
+            />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.itemName}>{item.title}</Text>
+              <Text style={styles.meta}>Qty: {item.quantity || 1} | ₹{item.price}</Text>
+              <Text style={styles.meta}>Delivery by: {deliveryDate}</Text>
+            </View>
+          </View>
+        );
+      })}
 
-          <Text style={styles.deliveryLabel}>Amount:</Text>
-          <Text style={styles.deliveryValue}>Paid via {paymentMode}</Text>
-          <Text style={styles.amount}>${amount}</Text>
-        </View>
+      <View style={styles.sectionDivider} />
+
+      {/* ✅ Payment Summary */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Payment Details</Text>
+        <Text style={styles.meta}>Paid via: {paymentMethod}</Text>
+        <Text style={styles.amount}>₹{amount}</Text>
       </View>
 
       <View style={styles.sectionDivider} />
 
-      {/* Buttons */}
+      {/* ✅ Action Buttons */}
       <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.navigate('Home')}>
-          <Text style={styles.cancelText}>Cancel order</Text>
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => navigation.navigate('Home')}
+        >
+          <Text style={styles.cancelText}>Cancel Order</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.trackButton} onPress={() => navigation.navigate('TrackOrder')}>
+        <TouchableOpacity
+          style={styles.trackButton}
+          onPress={() => navigation.navigate('TrackOrder')}
+        >
           <MaterialIcons name="my-location" size={16} color="#fff" />
-          <Text style={styles.trackText}>Track order</Text>
+          <Text style={styles.trackText}>Track Order</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 export default OrderSuccessScreen;
 
+// ✅ Styles
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 20,
     paddingTop: 40,
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    // backgroundColor: '#fff',
   },
   successIcon: {
+    alignSelf: 'center',
     marginBottom: 20,
   },
   successTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 8,
+    textAlign: 'center',
+    marginBottom: 6,
   },
   successSubtitle: {
     fontSize: 14,
@@ -97,9 +150,11 @@ const styles = StyleSheet.create({
   },
   sectionDivider: {
     height: 1,
-    width: '100%',
     backgroundColor: '#eee',
-    marginVertical: 20,
+    marginVertical: 10,
+  },
+  section: {
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 16,
@@ -109,36 +164,38 @@ const styles = StyleSheet.create({
   addressText: {
     fontSize: 14,
     color: '#444',
+    marginBottom: 2,
   },
-  deliveryRow: {
+  itemRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+    gap: 12,
+    marginBottom: 16,
   },
   productImage: {
     width: 80,
     height: 80,
     borderRadius: 10,
+    backgroundColor: '#eee',
   },
-  deliveryLabel: {
-    fontSize: 13,
-    color: '#888',
-    marginTop: 4,
-  },
-  deliveryValue: {
+  itemName: {
     fontSize: 14,
     fontWeight: '600',
+    marginBottom: 4,
+  },
+  meta: {
+    fontSize: 13,
+    color: '#666',
   },
   amount: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     color: '#f58220',
+    marginTop: 4,
   },
   actionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
-    width: '100%',
+    marginTop: 30,
   },
   cancelButton: {
     borderWidth: 1,
