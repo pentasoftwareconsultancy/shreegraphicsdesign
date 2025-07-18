@@ -8,7 +8,6 @@ import * as Location from 'expo-location';
 import CustomHeader from '../components/CustomHeader';
 import { MaterialIcons } from '@expo/vector-icons';
 
-
 const STORAGE_KEY = 'user_addresses';
 
 const AddAddressScreen = ({ navigation }) => {
