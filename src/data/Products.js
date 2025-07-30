@@ -16,7 +16,7 @@ const products = [
         category: 'T-Shirts',
         price: '₹349.00',
         rating: '4.7',
-        image: { uri: 'https://i.pinimg.com/736x/a5/59/73/a55973060908c8dd04f5297ef578f47e.jpg' },
+        image: { uri: 'https://i.pinim  g.com/736x/a5/59/73/a55973060908c8dd04f5297ef578f47e.jpg' },
     },
     {
         id: 3,

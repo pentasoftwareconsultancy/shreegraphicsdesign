@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react'; // ✅ Removed useState
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-const ToggleButtons = () => {
-  const [activeToggle, setActiveToggle] = useState('premade'); // 'premade' or 'custom'
-
+// ✅ Receive state from parent
+const ToggleButtons = ({ activeToggle, setActiveToggle }) => {
   return (
     <View style={styles.toggleButtons}>
       <TouchableOpacity
@@ -11,7 +10,7 @@ const ToggleButtons = () => {
           styles.toggleButton,
           activeToggle === 'premade' ? styles.activeButton : styles.inactiveButton,
         ]}
-        onPress={() => setActiveToggle('premade')}
+        onPress={() => setActiveToggle('premade')} // ✅ Update state in parent
       >
         <Text style={activeToggle === 'premade' ? styles.activeText : styles.inactiveText}>
           Premade design
@@ -23,7 +22,7 @@ const ToggleButtons = () => {
           styles.toggleButton,
           activeToggle === 'custom' ? styles.activeButton : styles.inactiveButton,
         ]}
-        onPress={() => setActiveToggle('custom')}
+        onPress={() => setActiveToggle('custom')} // ✅ Update state in parent
       >
         <Text style={activeToggle === 'custom' ? styles.activeText : styles.inactiveText}>
           Custom design
