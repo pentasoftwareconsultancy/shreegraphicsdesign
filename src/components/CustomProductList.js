@@ -1,17 +1,16 @@
 import React from 'react';
 import { FlatList, View } from 'react-native';
-import ProductCard from './ProductCard';
+import CUstomProductCard from './CustomProductCard';
 
-
-const ProductList = ({ data, onProductPress }) => (
+const CustomProductList = ({ data, onProductPress }) => (
     <FlatList
         data={data}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         contentContainerStyle={{ paddingBottom: 100 }}
         columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 10 }}
-        renderItem={({ item }) => <ProductCard item={item} onPress={onProductPress} />}
+        renderItem={({ item }) => <CUstomProductCard item={item} onPress={onProductPress} />}
     />
 );
 
-export default ProductList;
+export default CustomProductList;

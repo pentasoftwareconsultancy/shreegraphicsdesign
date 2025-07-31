@@ -1,16 +1,16 @@
+// HomeScreen.js
 import React, { useState } from 'react';
-import { SafeAreaView, Text, View } from 'react-native';
+import { SafeAreaView, Text } from 'react-native';
 import HeaderBar from '../components/HeaderBar';
 import SearchBarWithFilter from '../components/SearchBarWithFilter';
 import OfferBanner from '../components/OfferBanner';
 import ToggleButtons from '../components/ToggleButtons';
 import ProductList from '../components/ProductList';
 import FilterModal from '../components/FilterModal';
-import products from '../data/Products'; // ✅ default import
+import products from '../data/Products';
+import customProducts from '../data/CustomProducts';
 import { useNavigation } from '@react-navigation/native';
-import { FlatList } from 'react-native-gesture-handler';
-import PremadeItemCard from '../components/PremadeItemCard';
-import { premadeItems } from '../data/PremadeItemsData';
+import CustomProductList from '../components/CustomProductList';
 
 const HomeScreen = () => {
     const [filterVisible, setFilterVisible] = useState(false);
@@ -18,11 +18,10 @@ const HomeScreen = () => {
     const [price, setPrice] = useState(1000);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeToggle, setActiveToggle] = useState('premade');
+    const navigation = useNavigation();
 
-    const navigation = useNavigation(); // ✅ if not passed as prop
-
-    const filteredProducts = products
-        ?.filter((item) => {
+    const filterItems = (items) =>
+        items?.filter((item) => {
             const priceNumber = parseFloat(item.price.replace('₹', ''));
             const matchCategory =
                 selectedCategories.length === 0 || selectedCategories.includes(item.category);
@@ -30,9 +29,11 @@ const HomeScreen = () => {
             const matchSearch =
                 item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item.subtitle.toLowerCase().includes(searchQuery.toLowerCase());
-
             return matchCategory && matchPrice && matchSearch;
         });
+
+    const filteredPremade = filterItems(products);
+    const filteredCustom = filterItems(customProducts);
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -48,37 +49,26 @@ const HomeScreen = () => {
                 setActiveToggle={setActiveToggle}
             />
 
-            {/* 👇 Use the toggle condition here */}
             {activeToggle === 'premade' ? (
                 <>
-                    <Text style={{ fontWeight: '700', fontSize: 16, margin: 10 }}>All items</Text>
+                    <Text style={{ fontWeight: '700', fontSize: 16, margin: 10 }}>All Premade Items</Text>
                     <ProductList
-                        data={filteredProducts}
+                        data={filteredPremade}
                         onProductPress={(item) => {
-                            navigation.navigate('ProductDetail', { product: item });
+                            navigation.navigate('ProductDetail', { product: { ...item, isCustom: false } });
                         }}
                     />
                 </>
             ) : (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ color: '#888', fontSize: 16 }}>No custom design items available.</Text>
-                </View>
-
-                // <View style={{ paddingHorizontal: 16, marginTop: 20 }}>
-                //     <Text style={{ fontWeight: '700', fontSize: 18, marginBottom: 10 }}>
-                //         Our Clients <Text style={{ color: '#888' }}>(Premade design)</Text>
-                //     </Text>
-
-                //     <FlatList
-                //         horizontal
-                //         showsHorizontalScrollIndicator={false}
-                //         data={premadeItems}
-                //         keyExtractor={(item) => item.id.toString()}
-                //         renderItem={({ item }) => <PremadeItemCard item={item} />}
-                //         contentContainerStyle={{ gap: 12 }}
-                //     />
-                // </View>
-
+                <>
+                    <Text style={{ fontWeight: '700', fontSize: 16, margin: 10 }}>All Custom Products</Text>
+                    <CustomProductList
+                        data={filteredCustom}
+                        onProductPress={(item) => {
+                            navigation.navigate('ProductDetail', { product: { ...item, isCustom: true } });
+                        }}
+                    />
+                </>
             )}
 
             <FilterModal
@@ -89,10 +79,8 @@ const HomeScreen = () => {
                 setCategories={setSelectedCategories}
                 onClose={() => setFilterVisible(false)}
             />
-
         </SafeAreaView>
     );
-
 };
 
 export default HomeScreen;

@@ -1,4 +1,4 @@
-const products = [
+const CustomProducts = [
     // ----- T-Shirts -----
     {
         id: 1,
@@ -11,7 +11,7 @@ const products = [
     },
     {
         id: 2,
-        title: 'Printed Tee',
+        title: 'Printed T-Shirt',
         subtitle: 'Casual Wear',
         category: 'T-Shirts',
         price: '₹349.00',
@@ -335,4 +335,4 @@ const products = [
 ];
 
 
-export default products;
+export default CustomProducts;

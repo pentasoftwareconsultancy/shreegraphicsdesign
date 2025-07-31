@@ -1,3 +1,4 @@
+// ProductDetailScreen.js
 import React, { useState } from 'react';
 import {
     View,
@@ -14,6 +15,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFavorite } from '../context/FavoriteContext';
 import { useCart } from '../context/CartContext';
+import * as ImagePicker from 'expo-image-picker';
 
 const ProductDetailScreen = () => {
     const navigation = useNavigation();
@@ -27,9 +29,19 @@ const ProductDetailScreen = () => {
     const [selectedSize, setSelectedSize] = useState('M');
     const [selectedColor, setSelectedColor] = useState(product?.colors?.[0] || '#60a69f');
     const [descriptionText, setDescriptionText] = useState('');
+    const [uploadedLogo, setUploadedLogo] = useState(null); // ✅ New
 
-    const sizes = ['S', 'M', 'L', 'XL'];
-    const colors = product?.colors || ['#60a69f', '#cad6d2', '#b9c0ba'];
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+        if (!result.canceled) {
+            setUploadedLogo(result.assets[0].uri);
+        }
+    };
 
     const handleAddToCart = () => {
         addToCart({
@@ -38,6 +50,7 @@ const ProductDetailScreen = () => {
             size: selectedSize,
             color: selectedColor,
             description: descriptionText,
+            logo: uploadedLogo, // ✅
         });
         navigation.navigate('Cart');
     };
@@ -50,6 +63,7 @@ const ProductDetailScreen = () => {
                 size: selectedSize,
                 color: selectedColor,
                 description: descriptionText,
+                logo: uploadedLogo, // ✅
             },
         });
     };
@@ -83,7 +97,7 @@ const ProductDetailScreen = () => {
                     <View style={styles.selectColumn}>
                         <Text style={styles.label}>Choose Size</Text>
                         <View style={styles.optionsRow}>
-                            {sizes.map((size) => (
+                            {['S', 'M', 'L', 'XL'].map((size) => (
                                 <TouchableOpacity
                                     key={size}
                                     style={[styles.sizeBtn, selectedSize === size && styles.sizeSelected]}
@@ -98,7 +112,7 @@ const ProductDetailScreen = () => {
                     <View style={styles.selectColumn}>
                         <Text style={styles.label}>Color</Text>
                         <View style={styles.optionsRow}>
-                            {colors.map((color, index) => (
+                            {(product.colors || ['#60a69f', '#cad6d2', "#000"]).map((color, index) => (
                                 <TouchableOpacity
                                     key={index}
                                     style={[
@@ -113,14 +127,45 @@ const ProductDetailScreen = () => {
                     </View>
                 </View>
 
+                {/* ✅ Only show upload if it's a custom product */}
                 <Text style={styles.sectionHeader}>Description</Text>
-                <TextInput
-                    style={styles.inputBox}
-                    placeholder="Write product description here..."
-                    multiline
-                    value={descriptionText}
-                    onChangeText={setDescriptionText}
-                />
+
+                {product.isCustom ? (
+                    <View style={styles.customRow}>
+                        {/* Left: Description */}
+                        <TextInput
+                            style={styles.descriptionInput}
+                            placeholder="Enter your description..."
+                            multiline
+                            // blurOnSubmit={false}
+                            textAlignVertical="top"
+                            value={descriptionText}
+                            onChangeText={setDescriptionText}
+                        />
+
+                        {/* Right: Upload */}
+                        <TouchableOpacity style={styles.logoUploadBox} onPress={pickImage}>
+                            {uploadedLogo ? (
+                                <Image source={{ uri: uploadedLogo }} style={styles.logoImage} />
+                            ) : (
+                                <>
+                                    <Ionicons name="cloud-upload-outline" size={20} color="#999" />
+                                    <Text style={styles.uploadText}>Upload{'\n'}Logo</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <TextInput
+                        style={styles.inputBox}
+                        placeholder="Write product description here..."
+                        multiline
+                        value={descriptionText}
+                        onChangeText={setDescriptionText}
+                    />
+                )}
+
+
 
                 <Text style={styles.sectionHeader}>Customer review</Text>
                 <View style={styles.reviewBox}>
@@ -129,11 +174,7 @@ const ProductDetailScreen = () => {
                 </View>
 
                 <Text style={styles.sectionHeader}>Related Products</Text>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.relatedWrapper}
-                >
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.relatedWrapper}>
                     {[1, 2, 3].map((_, index) => (
                         <View key={index} style={styles.relatedCard}>
                             <Image source={product.image} style={styles.relatedImage} />
@@ -169,7 +210,10 @@ const ProductDetailScreen = () => {
     );
 };
 
+
+
 export default ProductDetailScreen;
+
 
 
 const styles = StyleSheet.create({
@@ -255,6 +299,47 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
     },
+    customRow: {
+        flexDirection: 'row',
+        gap: 10,
+        alignItems: 'center',
+        marginVertical: 20,
+    },
+
+    descriptionInput: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 10,
+        padding: 10,
+        minHeight: 80,
+        textAlignVertical: 'top',
+        fontSize: 14,
+        color: '#333',
+    },
+
+    logoUploadBox: {
+        width: 80,
+        height: 80,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+
+    logoImage: {
+        width: 60,
+        height: 60,
+        borderRadius: 5,
+    },
+
+    uploadText: {
+        fontSize: 10,
+        textAlign: 'center',
+        color: '#999',
+    },
+
     reviewPlaceholder: { color: '#aaa', fontSize: 13 },
     relatedWrapper: { paddingHorizontal: 20, marginBottom: 20 },
     relatedCard: {
